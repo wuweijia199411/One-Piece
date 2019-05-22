@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- Spring IOC注解入门-->
+    <!--使用IOC的注解开发，配置组件扫描 哪些包下的类使用IOC的注解-->
+    <context:component-scan base-package="com.spring"></context:component-scan>
+    <!--配置目标对象，被增强对象-->
+    <bean id="productDao" class="com.spring.aopfight.ProductDaoImpl"></bean>
+    <!--将切面类交给Spring管理-->
+    <bean id="myAspect" class="com.spring.aopfight.MyAspectXML"></bean>
+
+    <!--通过aop配置完成对目标类的代理-->
+    <aop:config>
+
+        <aop:pointcut id="pointcut1" expression="execution(* com.spring.aopfight.ProductDaoImpl.save(..))"></aop:pointcut>
+        <aop:pointcut id="pointcut2" expression="execution(* com.spring.aopfight.ProductDaoImpl.delete(..))"></aop:pointcut>
+        <aop:pointcut id="pointcut3" expression="execution(* com.spring.aopfight.ProductDaoImpl.search(..))"></aop:pointcut>
+        <aop:pointcut id="pointcut4" expression="execution(* com.spring.aopfight.ProductDaoImpl.update(..))"></aop:pointcut>
+        <!--配置切面-->
+        <aop:aspect ref="myAspect">
+            <!--前置-->
+            <aop:before method="checkPri" pointcut-ref="pointcut1"></aop:before>
+            <!--后置-->
+            <aop:after-returning method="writeLog" pointcut-ref="pointcut2" returning="result"></aop:after-returning>
+            <!--环绕-->
+            <aop:around method="around" pointcut-ref="pointcut3"></aop:around>
+            <!--异常抛出-->
+            <aop:after-throwing method="afterThrowing" pointcut-ref="pointcut4" throwing="ex"></aop:after-throwing>
+            <!--最终通知-->
+            <aop:after method="after" pointcut-ref="pointcut4"></aop:after>
+        </aop:aspect>
+
+    </aop:config>
+
+    <aop:aspectj-autoproxy/>
+    <bean id="orderDao" class="com.spring.aopannotation.OrderDao"></bean>
+
+    <!--配置切面类-->
+    <bean id="myAspectanno" class="com.spring.aopannotation.MyAspectAnno"></bean>
+
+    <!--配置Spring的内置的连接池-->
+     <!--<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        &lt;!&ndash;属性注入&ndash;&gt;
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+        <property name="url" value="jdbc:mysql:///spring4"></property>
+        <property name="username" value="root"></property>
+        <property name="password" value="123456"></property>
+    </bean>-->
+
+    <!--配置DBCP连接池================-->
+    <!--<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+        <property name="url" value="jdbc:mysql:///spring4"></property>
+        <property name="username" value="root"></property>
+        <property name="password" value="123456"></property>
+    </bean>-->
+
+    <!--引入属性文件-->
+    <!--第一种方式通过bean标签引入-->
+<!--    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:jdbc.properties"></property>
+    </bean>-->
+
+    <!--第二种方式通过context标签引入-->
+    <context:property-placeholder location="classpath:jdbc.properties"></context:property-placeholder>
+
+    <!--配置c3p0连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driverClass}"></property>
+        <property name="jdbcUrl" value="${jdbc.url}"></property>
+        <property name="user" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+
+    <!--配置Spring的JDBC摸板-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"></property>
+
+    </bean>
+
+</beans>
